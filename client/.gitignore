@@ -3,3 +3,4 @@
 node_modules
 supabase
 fangzi.code-workspace
+.env.local
