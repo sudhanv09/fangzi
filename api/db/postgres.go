@@ -1,12 +1,15 @@
 package db
 
-import "database/sql"
+import (
+	"database/sql"
+	_ "github.com/lib/pq"
+)
 
-func initPgDb() error {
+func InitPgDb() (*sql.DB, error) {
 	connStr := "host=localhost;user=postgres;password=postgres;dbname=fangzidb;port=5432;pooling=true;"
-	_, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return db, nil
 }

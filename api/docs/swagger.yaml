@@ -1,0 +1,99 @@
+definitions:
+  main.signInRequestBody:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  main.signUpRequestBody:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Backend API for fangzi.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login user
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.signInRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session ID
+          schema:
+            type: string
+      summary: Login
+      tags:
+      - auth
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session ID
+          schema:
+            type: string
+      summary: Logout
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register user
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.signUpRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session ID
+          schema:
+            type: string
+      summary: Register
+      tags:
+      - auth
+swagger: "2.0"

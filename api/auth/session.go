@@ -2,11 +2,17 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
+
+func InitSessionManager(rdb *redis.Client, db *sql.DB) *AuthManager {
+	return &AuthManager{Db: db, Rdb: rdb}
+}
 
 func (auth *AuthManager) GetUserSession(sessionId string) (UserSessionResponse, error) {
 	var user UserSessionResponse
@@ -56,14 +62,15 @@ func (auth *AuthManager) LogOutHandler(sessionId string) error {
 	return auth.Rdb.Del(context.Background(), sessionId).Err()
 }
 
-func (auth *AuthManager) SignUpHandler(user signUpRequestBody) (string, error) {
+func (auth *AuthManager) SignUpHandler(user SignUpRequestBody) (string, error) {
 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := auth.Db.Exec("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", user.Name, user.Email, string(hashedPass))
+	res, err := auth.Db.Exec("INSERT INTO users (name, email, password, join_date) VALUES ($1, $2, $3, $4)",
+		user.Name, user.Email, string(hashedPass), time.Now().Format(time.RFC3339))
 	if err != nil {
 		return "", err
 	}
