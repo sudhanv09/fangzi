@@ -24,7 +24,7 @@ type User struct {
 }
 
 type UserSessionResponse struct {
-	Id    int
+	Id    string
 	Name  string
 	Email string
 }

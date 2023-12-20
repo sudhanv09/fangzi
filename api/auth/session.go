@@ -2,16 +2,19 @@ package auth
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
+	"sudhanv09/fangzi/db"
 	"time"
 )
 
-func InitSessionManager(rdb *redis.Client, db *sql.DB) *AuthManager {
-	return &AuthManager{Db: db, Rdb: rdb}
+func (auth *AuthManager) InitDb() {
+	_, err := db.InitPgDb()
+	if err != nil {
+		panic(err)
+	}
+	db.InitRedis()
 }
 
 func (auth *AuthManager) GetUserSession(sessionId string) (UserSessionResponse, error) {
@@ -47,7 +50,7 @@ func (auth *AuthManager) LogInHandler(email, password string) (string, error) {
 	}
 
 	sessionId, err := auth.generateSession(UserSessionResponse{
-		Id:    user.Id,
+		Id:    string(user.Id),
 		Name:  user.Name,
 		Email: user.Email,
 	})
@@ -69,19 +72,15 @@ func (auth *AuthManager) SignUpHandler(user SignUpRequestBody) (string, error) {
 		return "", err
 	}
 
-	res, err := auth.Db.Exec("INSERT INTO users (name, email, password, join_date) VALUES ($1, $2, $3, $4)",
-		user.Name, user.Email, string(hashedPass), time.Now().Format(time.RFC3339))
-	if err != nil {
-		return "", err
-	}
-
-	id, err := res.LastInsertId()
+	var userId string
+	err = auth.Db.QueryRow("INSERT INTO users (name, email, password, join_date) VALUES ($1, $2, $3, $4) RETURNING id",
+		user.Name, user.Email, string(hashedPass), time.Now().Format(time.RFC3339)).Scan(&userId)
 	if err != nil {
 		return "", err
 	}
 
 	sessionId, err := auth.generateSession(UserSessionResponse{
-		Id:    int(id),
+		Id:    userId,
 		Name:  user.Name,
 		Email: user.Email,
 	})

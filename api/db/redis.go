@@ -2,11 +2,13 @@ package db
 
 import "github.com/redis/go-redis/v9"
 
+var Rdb *redis.Client
+
 func InitRedis() *redis.Client {
-	client := redis.NewClient(&redis.Options{
+	Rdb = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
 	})
-	return client
+	return Rdb
 }

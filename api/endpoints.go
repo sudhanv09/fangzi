@@ -7,14 +7,6 @@ import (
 	"sudhanv09/fangzi/auth"
 )
 
-type EndpointManager struct {
-	auth *auth.AuthManager
-}
-
-func InitEndpoints(auth *auth.AuthManager) *EndpointManager {
-	return &EndpointManager{auth: auth}
-}
-
 // @Summary Get listings
 // @Description Get listings
 // @Tags listings
@@ -42,7 +34,7 @@ func createListings(w http.ResponseWriter, r *http.Request) {}
 // @Param user body main.signInRequestBody true "User credentials"
 // @Success 200 {string} string "Session ID"
 // @Router /login [post]
-func (e *EndpointManager) Login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	var user signInRequestBody
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -57,7 +49,8 @@ func (e *EndpointManager) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionId, err := e.auth.LogInHandler(user.Email, user.Password)
+	var auth auth.AuthManager
+	sessionId, err := auth.LogInHandler(user.Email, user.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -76,7 +69,7 @@ func (e *EndpointManager) Login(w http.ResponseWriter, r *http.Request) {
 // @Param user body main.signUpRequestBody true "User credentials"
 // @Success 200 {string} string "Session ID"
 // @Router /register [post]
-func (e *EndpointManager) Register(w http.ResponseWriter, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request) {
 	var user auth.SignUpRequestBody
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -91,7 +84,8 @@ func (e *EndpointManager) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionId, err := e.auth.SignUpHandler(user)
+	var auth auth.AuthManager
+	sessionId, err := auth.SignUpHandler(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -108,7 +102,7 @@ func (e *EndpointManager) Register(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Success 200 {string} string "Session ID"
 // @Router /logout [post]
-func (e *EndpointManager) Logout(w http.ResponseWriter, r *http.Request) {
+func Logout(w http.ResponseWriter, r *http.Request) {
 	sessionHeader := r.Header.Get("Authorization")
 	if sessionHeader == "" || len(sessionHeader) < 8 || sessionHeader[:7] != "Bearer " {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -116,7 +110,9 @@ func (e *EndpointManager) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionId := sessionHeader[7:]
-	err := e.auth.LogOutHandler(sessionId)
+
+	var auth auth.AuthManager
+	err := auth.LogOutHandler(sessionId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

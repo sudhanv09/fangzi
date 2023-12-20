@@ -1,17 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"sudhanv09/fangzi/auth"
-	"sudhanv09/fangzi/db"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/swaggo/http-swagger"
-	"go.uber.org/fx"
 
 	_ "sudhanv09/fangzi/docs"
 )
@@ -27,7 +24,7 @@ import (
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-func initRouter(lc fx.Lifecycle, epmgr *EndpointManager) {
+func initRouter() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{}))
@@ -44,49 +41,21 @@ func initRouter(lc fx.Lifecycle, epmgr *EndpointManager) {
 	//r.Get("/listings/{id}", getListingById)
 	//r.Post("/listings/new", createListings)
 
-	r.Post("/login", epmgr.Login)
-	r.Post("/register", epmgr.Register)
-	r.Get("/logout", epmgr.Logout)
+	r.Post("/login", Login)
+	r.Post("/register", Register)
+	r.Get("/logout", Logout)
 
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			fmt.Println("Started Server. Listening on :3720")
-			server := http.Server{
-				Addr:    ":3720",
-				Handler: r,
-			}
+	fmt.Println("Started Server. Listening on :3720")
+	err := http.ListenAndServe(":3720", nil)
+	if err != nil {
+		return
+	}
 
-			// Run the server in a separate goroutine
-			go func() {
-				if err := server.ListenAndServe(); err != nil {
-					fmt.Printf("Error starting server: %s\n", err)
-				}
-			}()
-
-			// Wait for the context to be done (e.g., when the application is stopped)
-			<-ctx.Done()
-
-			// Shutdown the server gracefully
-			if err := server.Shutdown(context.Background()); err != nil {
-				fmt.Printf("Error shutting down server: %s\n", err)
-			}
-
-			return nil
-		},
-		OnStop: func(ctx context.Context) error {
-			fmt.Println("Stopping Server")
-			return nil
-		},
-	})
 }
 
 func main() {
-	fx.New(
-		fx.Provide(
-			db.InitRedis,
-			db.InitPgDb,
-			auth.InitSessionManager,
-			InitEndpoints,
-		), fx.Invoke(initRouter),
-	).Run()
+	authMgr := &auth.AuthManager{}
+	authMgr.InitDb()
+
+	initRouter()
 }
