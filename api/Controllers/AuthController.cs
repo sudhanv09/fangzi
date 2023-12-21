@@ -7,13 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
+[Route("auth")]
 [ApiController]
 public class AuthController(SignInManager<User> signIn, UserManager<User> userManager) : Controller
 {
     private SignInManager<User> _SignIn { get; set; } = signIn;
-    public UserManager<User> _UserManager { get; set; }
+    public UserManager<User> _UserManager { get; set; } = userManager;
 
-    [HttpPost("/login")]
+    [HttpPost("login")]
     public async Task<IResult> Login([FromBody]LoginDto login)
     {
         if (!ModelState.IsValid) return Results.BadRequest("Input Invalid");
@@ -27,7 +28,7 @@ public class AuthController(SignInManager<User> signIn, UserManager<User> userMa
         return Results.Ok();
     }
     
-    [HttpPost("/register")]
+    [HttpPost("register")]
     public async Task<IResult> Register([FromBody]RegisterDto register)
     {
         if (!ModelState.IsValid) return Results.BadRequest("Input Invalid");
@@ -40,7 +41,7 @@ public class AuthController(SignInManager<User> signIn, UserManager<User> userMa
             NormalizedUserName = register.Name.ToUpper(),
         };
 
-        IdentityResult result = await _UserManager.CreateAsync(user, register.Password);
+        var result = await _UserManager.CreateAsync(user, register.Password);
         if (!result.Succeeded)
         {
             foreach (var resultError in result.Errors)
@@ -51,7 +52,7 @@ public class AuthController(SignInManager<User> signIn, UserManager<User> userMa
         return Results.Created();
     }
     
-    [HttpPost("/logout")]
+    [HttpPost("logout")]
     public async Task<IResult> Logout([FromBody]object empty)
     {
         await _SignIn.SignOutAsync();
