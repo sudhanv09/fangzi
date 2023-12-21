@@ -39,7 +39,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapIdentityApi<User>();
+// app.MapIdentityApi<User>();
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
