@@ -1,17 +1,11 @@
 import React from "react";
-import "@mantine/core/styles.css";
-import { MantineProvider, ColorSchemeScript } from "@mantine/core";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from "react-query";
+import '@mantine/core/styles.css';
+import { MantineProvider, ColorSchemeScript } from '@mantine/core';
 
 export const metadata = {
   title: "Fangzi",
   description: "A simple rental search website.",
 };
-
-const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -24,11 +18,7 @@ export default function RootLayout({
         <ColorSchemeScript />
       </head>
       <body>
-        <MantineProvider>
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
-        </MantineProvider>
+        <MantineProvider>{children}</MantineProvider>
       </body>
     </html>
   );
