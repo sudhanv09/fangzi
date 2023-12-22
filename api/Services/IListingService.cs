@@ -1,4 +1,5 @@
 using api.Models;
+using api.Models.DTO;
 
 namespace api.Services;
 
@@ -12,8 +13,8 @@ public interface IListingService
         int pageSize);
     Task<Listing> GetListingById(Guid id);
 
-    Task<Listing> CreateNewListing();
-    Task CreateNerf();
-    Task<Listing> UpdateListing(Listing listing);
-    Task RemoveListing();
+    Task<bool> CreateNewListing(ListingDto listingDto);
+    Task BuildNerf();
+    Task<Listing> UpdateListing(ListingDto listingDto);
+    Task<bool> RemoveListing(string id);
 }

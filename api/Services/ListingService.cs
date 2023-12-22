@@ -1,13 +1,14 @@
 using System.Linq.Expressions;
 using api.DbContext;
 using api.Models;
+using api.Models.DTO;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
-public class ListingService(AppDbContext dbContext) : IListingService
+public class ListingService(AppDbContext dbContext, ILogger<ListingService> logger) : IListingService
 {
-    private AppDbContext DbContext { get; set; } = dbContext;
     private static Expression<Func<Listing, object>> GetSortProperty(string sortColumn)
     {
         Expression<Func<Listing, object>> keySelector = sortColumn.ToLower() switch
@@ -20,10 +21,9 @@ public class ListingService(AppDbContext dbContext) : IListingService
         };
         return keySelector;
     }
-
     public async Task<PagedList<ListingResponse>> GetAllListings(string? search, string? sortOrder, string? sortColumn, int page, int pageSize)
     {
-        IQueryable<Listing> listingQuery = DbContext.Listings;
+        IQueryable<Listing> listingQuery = dbContext.Listings;
         
         // Search
         if (!string.IsNullOrWhiteSpace(search))
@@ -53,6 +53,8 @@ public class ListingService(AppDbContext dbContext) : IListingService
             Id = r.Id,
             Title = r.Title,
             Address = r.Address,
+            City = r.City,
+            PostalCode = r.PostalCode,
             Cost = r.Cost,
             Description = r.Description,
             Meta = r.Meta,
@@ -67,27 +69,68 @@ public class ListingService(AppDbContext dbContext) : IListingService
 
     public async Task<Listing> GetListingById(Guid id)
     {
-        var listingId = await DbContext.Listings.FirstOrDefaultAsync(i => i.Id == id);
+        var listingId = await dbContext.Listings.FirstOrDefaultAsync(i => i.Id == id);
         return listingId;
     }
 
-    public async Task<Listing> CreateNewListing()
+    public async Task<bool> CreateNewListing(ListingDto listingDto)
+    {
+        try
+        {
+            var newListing = new Listing()
+            {
+                Title = listingDto.Title,
+                Address = listingDto.Address,
+                City = listingDto.City,
+                PostalCode = listingDto.PostalCode,
+                Cost = listingDto.Cost,
+                Description = listingDto.Description,
+                Meta = listingDto.Meta,
+                Status = false,
+                Utilities = listingDto.Utilities
+            };
+
+            await dbContext.Listings.AddAsync(newListing);
+            await dbContext.SaveChangesAsync();
+
+            await BuildNerf();
+            return true;
+        }
+        
+        catch (Exception e)
+        {
+            logger.LogError(e, "There was an exception when saving listings");
+            await dbContext.Database.RollbackTransactionAsync();
+            return false;
+        }
+    }
+
+    public async Task BuildNerf()
     {
         throw new NotImplementedException();
     }
 
-    public async Task CreateNerf()
+    public async Task<Listing> UpdateListing(ListingDto listingDto)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<Listing> UpdateListing(Listing listing)
+    public async Task<bool> RemoveListing(string id)
     {
-        throw new NotImplementedException();
-    }
-
-    public async Task RemoveListing()
-    {
-        throw new NotImplementedException();
+        try
+        {
+            var getListing = await dbContext.Listings.FindAsync(id);
+            if (getListing is null) return false;
+            
+            dbContext.Listings.Remove(getListing);
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "There was an exception when removing listings");
+            await dbContext.Database.RollbackTransactionAsync();
+            return false;
+        }
     }
 }

@@ -1,4 +1,5 @@
 using api.Models;
+using api.Models.DTO;
 using api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ public class ListingsController(IListingService listingService) : Controller
         string? sortOrder,
         string? sortColumn,
         int page,
-        int pageSize)
+        int pageSize = 10)
     {
         var getListings = await _listing.GetAllListings(search, sortOrder, sortColumn, page, pageSize);
         return Results.Ok(getListings);
@@ -33,25 +34,29 @@ public class ListingsController(IListingService listingService) : Controller
         if (!isValid) return Results.BadRequest("Bad Id");
         
         var listingById = await _listing.GetListingById(modId);
-        return Results.Ok(listingById);
+        return listingById is null ? Results.NotFound() : Results.Ok(listingById);
     }
     
     [HttpPost("new")]
     [ValidateAntiForgeryToken]
-    public async Task<IResult> NewListings([FromForm]Listing listing)
+    public async Task<IResult> NewListings([FromForm]ListingDto listing)
     {
-        return Results.Ok();
+        if (!ModelState.IsValid) return Results.BadRequest();
+        
+        await _listing.CreateNewListing(listing);
+        return Results.Created();
     }
     
     
     [HttpPatch("update")]
-    public async Task<IResult> UpdateListings()
+    public async Task<IResult> UpdateListings([FromForm]ListingDto listing)
     {
+        if (!ModelState.IsValid) return Results.BadRequest();
         return Results.Ok();
     }
     
     [HttpPost("remove")]
-    public async Task<IResult> RemoveListings()
+    public async Task<IResult> RemoveListings(string id)
     {
         return Results.Ok();
     }
