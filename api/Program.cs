@@ -1,13 +1,16 @@
 using api.DbContext;
 using api.Models;
 using api.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Services
+builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAuthorization();
 builder.Services.AddScoped<IListingService, ListingService>();
 
 // CORS
@@ -27,8 +30,6 @@ builder.Services.AddIdentityApiEndpoints<User>()
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConn")));
 
-builder.Services.AddAuthorization();
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -37,11 +38,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
     });
 }
 
-// app.MapIdentityApi<User>();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

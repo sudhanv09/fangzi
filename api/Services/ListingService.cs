@@ -2,13 +2,13 @@ using System.Linq.Expressions;
 using api.DbContext;
 using api.Models;
 using api.Models.DTO;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
 public class ListingService(AppDbContext dbContext, ILogger<ListingService> logger) : IListingService
 {
+    
     private static Expression<Func<Listing, object>> GetSortProperty(string sortColumn)
     {
         Expression<Func<Listing, object>> keySelector = sortColumn.ToLower() switch
@@ -48,6 +48,7 @@ public class ListingService(AppDbContext dbContext, ILogger<ListingService> logg
         }
         
         // Pagination
+        // TODO load images if exists from localstorage
         var listingsResponseQuery = listingQuery.Select(r => new ListingResponse()
         {
             Id = r.Id,
@@ -77,6 +78,7 @@ public class ListingService(AppDbContext dbContext, ILogger<ListingService> logg
     {
         try
         {
+            // TODO Save images to local disk
             var newListing = new Listing()
             {
                 Title = listingDto.Title,
@@ -96,11 +98,15 @@ public class ListingService(AppDbContext dbContext, ILogger<ListingService> logg
             await BuildNerf();
             return true;
         }
-        
+
+        catch (DbUpdateException dbExcept)
+        {
+            logger.LogError(dbExcept, "There was an exception when saving listings");
+            return false;
+        }
         catch (Exception e)
         {
-            logger.LogError(e, "There was an exception when saving listings");
-            await dbContext.Database.RollbackTransactionAsync();
+            logger.LogError(e, "An error occurred while creating a new listing");
             return false;
         }
     }
@@ -126,10 +132,9 @@ public class ListingService(AppDbContext dbContext, ILogger<ListingService> logg
             await dbContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception e)
+        catch (DbUpdateException dbExcept)
         {
-            logger.LogError(e, "There was an exception when removing listings");
-            await dbContext.Database.RollbackTransactionAsync();
+            logger.LogError(dbExcept, "There was an exception when removing listings");
             return false;
         }
     }

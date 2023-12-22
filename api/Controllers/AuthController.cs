@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using api.Models;
 using api.Models.DTO;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,9 +55,28 @@ public class AuthController(SignInManager<User> signIn, UserManager<User> userMa
     }
     
     [HttpPost("logout")]
-    public async Task<IResult> Logout([FromBody]object empty)
+    public async Task<IResult> Logout()
     {
         await _SignIn.SignOutAsync();
         return Results.SignOut();
+    }
+
+    [Authorize]
+    [HttpGet("user")]
+    public async Task<IResult> GetUserInfo()
+    {
+        var userName = User.Identity.Name;
+        var userExists = await _UserManager.FindByNameAsync(userName);
+        if (userExists is null) return Results.NotFound();
+
+        var userResponse = new UserResponse()
+        {
+            Id = userExists.Id,
+            UserName = userExists.UserName,
+            Email = userExists.Email,
+            Listings = userExists.UserListings
+        };
+
+        return Results.Ok(userResponse);
     }
 }

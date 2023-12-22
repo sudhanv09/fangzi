@@ -9,7 +9,7 @@ public class ListingResponse
     public string City { get; set; }
     public int PostalCode { get; set; }
     public string Cost { get; set; }
-    public string Images { get; set; }
+    public byte[]? Images { get; set; }
     public List<string>? Utilities { get; set; }
     public List<string>? Meta { get; set; }
     public bool Status { get; set; }

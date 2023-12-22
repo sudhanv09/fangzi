@@ -38,7 +38,6 @@ public class ListingsController(IListingService listingService) : Controller
     }
     
     [HttpPost("new")]
-    [ValidateAntiForgeryToken]
     public async Task<IResult> NewListings([FromForm]ListingDto listing)
     {
         if (!ModelState.IsValid) return Results.BadRequest();
