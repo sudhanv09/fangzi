@@ -1,40 +1,58 @@
 using api.Models;
+using api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("listing")]
-public class ListingsController : Controller
+[Authorize]
+
+public class ListingsController(IListingService listingService) : Controller
 {
+    private IListingService _listing { get; set; } = listingService;
+    
     [HttpGet]
-    public async Task<IActionResult> GetAllListings()
+    [AllowAnonymous]
+    public async Task<IResult> GetListings(
+        string? search,
+        string? sortOrder,
+        string? sortColumn,
+        int page,
+        int pageSize)
     {
-        return Ok();
+        var getListings = await _listing.GetAllListings(search, sortOrder, sortColumn, page, pageSize);
+        return Results.Ok(getListings);
     }
     
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetListings(string id)
+    public async Task<IResult> GetListings(string id)
     {
-        return Ok();
+        bool isValid = Guid.TryParse(id, out Guid modId);
+        if (!isValid) return Results.BadRequest("Bad Id");
+        
+        var listingById = await _listing.GetListingById(modId);
+        return Results.Ok(listingById);
     }
     
     [HttpPost("new")]
-    public async Task<IActionResult> NewListings([FromForm]Listing listing)
+    [ValidateAntiForgeryToken]
+    public async Task<IResult> NewListings([FromForm]Listing listing)
     {
-        return Ok();
+        return Results.Ok();
     }
     
     
     [HttpPatch("update")]
-    public async Task<IActionResult> UpdateListings()
+    public async Task<IResult> UpdateListings()
     {
-        return Ok();
+        return Results.Ok();
     }
     
     [HttpPost("remove")]
-    public async Task<IActionResult> RemoveListings()
+    public async Task<IResult> RemoveListings()
     {
-        return Ok();
+        return Results.Ok();
     }
 }

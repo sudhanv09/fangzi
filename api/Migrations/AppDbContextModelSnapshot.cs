@@ -165,6 +165,10 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Cost")
                         .IsRequired()
                         .HasColumnType("text");
@@ -178,6 +182,12 @@ namespace api.Migrations
 
                     b.Property<List<string>>("Meta")
                         .HasColumnType("text[]");
+
+                    b.Property<DateTime>("PostDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PostalCode")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("Status")
                         .HasColumnType("boolean");

@@ -4,8 +4,13 @@ namespace api.Services;
 
 public interface IListingService
 {
-    Task<List<Listing>> GetAllListings();
-    Task<Listing> GetListingById(string id);
+    Task<PagedList<ListingResponse>> GetAllListings(
+        string? search,
+        string? sortOrder,
+        string? sortColumn,
+        int page,
+        int pageSize);
+    Task<Listing> GetListingById(Guid id);
 
     Task<Listing> CreateNewListing();
     Task CreateNerf();
