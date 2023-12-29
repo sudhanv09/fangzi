@@ -8,10 +8,9 @@ namespace api.Services;
 
 public class ListingService(AppDbContext dbContext, ILogger<ListingService> logger) : IListingService
 {
-    
-    private static Expression<Func<Listing, object>> GetSortProperty(string sortColumn)
+    private static Expression<Func<Listing, object>> GetSortProperty(string? sortColumn)
     {
-        Expression<Func<Listing, object>> keySelector = sortColumn.ToLower() switch
+        Expression<Func<Listing, object>> keySelector = sortColumn?.ToLower() switch
         {
             "date" => listings => listings.PostDate,
             "cost" => listings => listings.Cost,
@@ -28,6 +27,7 @@ public class ListingService(AppDbContext dbContext, ILogger<ListingService> logg
         // Search
         if (!string.IsNullOrWhiteSpace(search))
         {
+            // TODO search meta
             listingQuery = listingQuery.Where(q => 
                 q.Title.Contains(search) ||
                 q.Address.Contains(search) ||
@@ -37,18 +37,9 @@ public class ListingService(AppDbContext dbContext, ILogger<ListingService> logg
         
         // Sorting
         var keySelector = GetSortProperty(sortColumn);
-
-        if (sortOrder.ToLower() == "desc")
-        {
-            listingQuery = listingQuery.OrderByDescending(keySelector);
-        }
-        else
-        {
-            listingQuery = listingQuery.OrderBy(keySelector);
-        }
+        listingQuery = sortOrder?.ToLower() == "desc" ? listingQuery.OrderByDescending(keySelector) : listingQuery.OrderBy(keySelector);
         
         // Pagination
-        // TODO load images if exists from localstorage
         var listingsResponseQuery = listingQuery.Select(r => new ListingResponse()
         {
             Id = r.Id,
@@ -78,24 +69,26 @@ public class ListingService(AppDbContext dbContext, ILogger<ListingService> logg
     {
         try
         {
+            var meta = new MetaBuilder().BuildMeta(listingDto);
+            
             // TODO Save images to local disk
             var newListing = new Listing()
             {
+                UserId = listingDto.UserId,
                 Title = listingDto.Title,
                 Address = listingDto.Address,
                 City = listingDto.City,
                 PostalCode = listingDto.PostalCode,
                 Cost = listingDto.Cost,
                 Description = listingDto.Description,
-                Meta = listingDto.Meta,
+                Meta = meta,
                 Status = false,
                 Utilities = listingDto.Utilities
             };
 
             await dbContext.Listings.AddAsync(newListing);
             await dbContext.SaveChangesAsync();
-
-            await BuildNerf();
+            
             return true;
         }
 

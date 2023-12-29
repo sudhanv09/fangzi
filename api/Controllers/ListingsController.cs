@@ -1,4 +1,3 @@
-using api.Models;
 using api.Models.DTO;
 using api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -42,10 +41,15 @@ public class ListingsController(IListingService listingService) : Controller
     {
         if (!ModelState.IsValid) return Results.BadRequest();
         
-        await _listing.CreateNewListing(listing);
-        return Results.Created();
+        var success = await _listing.CreateNewListing(listing);
+        return success ? Results.Created() : Results.StatusCode(500) ;
     }
-    
+
+    [HttpGet("assets")]
+    public async Task<IResult> GetListingAssets(string id)
+    {
+        return Results.Ok();
+    }
     
     [HttpPatch("update")]
     public async Task<IResult> UpdateListings([FromForm]ListingDto listing)
@@ -57,6 +61,7 @@ public class ListingsController(IListingService listingService) : Controller
     [HttpPost("remove")]
     public async Task<IResult> RemoveListings(string id)
     {
-        return Results.Ok();
+        var success = await _listing.RemoveListing(id);
+        return success ? Results.Created() : Results.StatusCode(500);
     }
 }
